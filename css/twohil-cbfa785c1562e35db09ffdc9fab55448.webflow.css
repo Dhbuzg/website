@@ -30,12 +30,6 @@
   display: flex;
 }
 
-.w-backgroundvideo-backgroundvideoplaypausebutton:focus-visible {
-  outline-offset: 2px;
-  border-radius: 50%;
-  outline: 2px solid #3b79c3;
-}
-
 @media screen and (max-width: 991px) {
   .w-layout-blockcontainer {
     max-width: 728px;
