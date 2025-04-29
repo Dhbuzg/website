@@ -905,7 +905,7 @@ textarea.w-select {
   background-position: 50% 50%;
   position: absolute;
   margin: auto;
-  width: 100%;
+  width: auto;
   height: 100%;
   right: -100%;
   bottom: -100%;
