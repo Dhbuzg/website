@@ -27,6 +27,36 @@
       ("ontouchstart" in o||o.DocumentTouch&&c instanceof DocumentTouch)&&(n.className+=t+"touch");
     }(window,document);
   </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      const form = document.getElementById('email-form');
+      const success = document.querySelector('.w-form-done');
+      const error   = document.querySelector('.w-form-fail');
+  
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        success.style.display = 'none';
+        error.style.display   = 'none';
+  
+        const data = new FormData(form);
+        try {
+          const resp = await fetch(form.action, {
+            method:  'POST',
+            body:    data,
+            headers: { 'Accept': 'application/json' }
+          });
+          if (resp.ok) {
+            form.reset();
+            success.style.display = 'block';
+          } else {
+            throw new Error('Erreur serveur');
+          }
+        } catch (err) {
+          error.style.display = 'block';
+        }
+      });
+    });
+  </script>  
 </head>
 <body>
   
@@ -87,12 +117,12 @@
         </div>
         <div id="w-node-_2896549d-a44a-9b18-3957-ee64058cef09-254993f7" class="divider"></div>
         <div id="w-node-_604ff45c-93b9-77d4-f606-4bd15200b669-254993f7" class="w-form">
-          <form id="email-form" name="email-form" data-name="Email Form" method="get" data-wf-page-id="66c1a81602e33660254993f7" data-wf-element-id="604ff45c-93b9-77d4-f606-4bd15200b66a"><label for="name-2" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b66b" style="opacity:0" class="field-label">Nom</label><input class="text-field w-input" maxlength="256" name="name-2" data-name="Name 2" style="opacity:0" placeholder="ex. Virgine Lafonde" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b66d" type="text" id="name-2" required=""><label for="email-2" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b66e" style="opacity:0" class="field-label">Email Address</label><input class="text-field w-input" maxlength="256" name="email-2" data-name="Email 2" style="opacity:0" placeholder="ex. hello@gmail.com" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b670" type="email" id="email-2" required=""><label for="field-2" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b674" style="opacity:0" class="field-label">Description</label><textarea class="text-field big w-input" maxlength="5000" name="field-2" data-name="Field 2" style="opacity:0" placeholder="Comment je peux t&#x27;aider ?" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b676" id="field-2" required=""></textarea><input type="submit" data-wait="S&#x27;il vous plait, attendez..." data-w-id="604ff45c-93b9-77d4-f606-4bd15200b677" style="opacity:0" class="primary-button w-button" value="Envoyer"></form>
+          <form action="https://formspree.io/f/movdeqqe" method="POST" id="email-form" name="email-form" data-name="Email Form" method="get" data-wf-page-id="66c1a81602e33660254993f7" data-wf-element-id="604ff45c-93b9-77d4-f606-4bd15200b66a"><label for="name-2" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b66b" style="opacity:0" class="field-label">Nom</label><input class="text-field w-input" maxlength="256" name="name-2" data-name="Name 2" style="opacity:0" placeholder="ex. Virgine Lafonde" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b66d" type="text" id="name-2" required=""><label for="email-2" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b66e" style="opacity:0" class="field-label">Email Address</label><input class="text-field w-input" maxlength="256" name="email-2" data-name="Email 2" style="opacity:0" placeholder="ex. hello@gmail.com" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b670" type="email" id="email-2" required=""><label for="field-2" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b674" style="opacity:0" class="field-label">Description</label><textarea class="text-field big w-input" maxlength="5000" name="field-2" data-name="Field 2" style="opacity:0" placeholder="Comment je peux t&#x27;aider ?" data-w-id="604ff45c-93b9-77d4-f606-4bd15200b676" id="field-2" required=""></textarea><input type="submit" data-wait="S&#x27;il vous plait, attendez..." data-w-id="604ff45c-93b9-77d4-f606-4bd15200b677" style="opacity:0" class="primary-button w-button" value="Envoyer"></form>
           <div class="success-message w-form-done">
-            <div>Thank you! Your submission has been received!</div>
+            <div>Merci ! Votre message à bien été reçu.</div>
           </div>
           <div class="error-message w-form-fail">
-            <div>Oops! Something went wrong while submitting the form.</div>
+            <div>Quelques choses ne fonctionnes pas, je travaille dessus pour résoudre le problème.</div>
           </div>
         </div>
       </div>
