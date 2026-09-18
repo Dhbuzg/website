@@ -58,18 +58,7 @@
 }
 
 /* Clay -------------------------------------------------------------------- */
-#project-clay summary {
-  display: flex;
-  flex-direction: column;
-}
-
-#project-clay .project-caption--above {
-  order: 0;
-  margin-bottom: 14px;
-}
-
 #project-clay .project-image--video {
-  order: 1;
   overflow: hidden;
   background: #111;
 }
@@ -83,4 +72,38 @@
 
 #project-clay .project-media-stack {
   margin-top: 8px;
+}
+
+
+/* Clay copy: force the description/facts to remain visible before the stack. */
+#project-clay .clay-project-copy {
+  display: block !important;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 28px;
+}
+
+#project-clay .clay-project-copy .project-description {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: static !important;
+  height: auto !important;
+  max-height: none !important;
+  margin-top: 12px;
+}
+
+#project-clay .clay-project-copy .project-facts {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: static !important;
+  height: auto !important;
+  max-height: none !important;
+  margin-top: 24px;
+}
+
+#project-clay .project-media-stack {
+  margin-top: 0;
 }
