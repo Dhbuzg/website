@@ -1,0 +1,54 @@
+/* LEGO interactive media stack -------------------------------------------- */
+
+#project-lego .project-content {
+  overflow: visible;
+}
+
+.lego-media-stack {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-top: 28px;
+  overflow: visible;
+  cursor: pointer;
+  isolation: isolate;
+  touch-action: manipulation;
+}
+
+.lego-stack-card {
+  position: absolute;
+  inset: 0;
+  z-index: var(--stack-z, 0);
+  transform:
+    translate3d(var(--stack-x, 0px), var(--stack-y, 0px), 0)
+    rotate(var(--stack-rotation, 0deg));
+  transform-origin: center;
+  transition: transform 430ms cubic-bezier(.22, 1, .36, 1);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.lego-stack-card.is-top {
+  pointer-events: auto;
+}
+
+.lego-stack-card .project-video {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: block;
+  object-fit: cover;
+  background: #111;
+}
+
+@media (max-width: 767px) {
+  .lego-media-stack {
+    margin-top: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lego-stack-card {
+    transition-duration: 1ms;
+  }
+}
