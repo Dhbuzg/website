@@ -49,11 +49,20 @@ window.addEventListener('load', () => {
 function syncVideo(video) {
   if (!video) return;
 
+  // Static project previews are intentionally frozen.
+  if (video.hasAttribute('data-static-preview')) {
+    video.pause();
+    return;
+  }
+
   const project = video.closest('.project-details');
   const stackCard = video.closest('.stack-card');
+  const isThumbnail = video.classList.contains('project-thumbnail-video');
   const isActiveStackCard = !stackCard || stackCard.classList.contains('is-top');
   const allowed = project
-    ? project.open && project.dataset.closing !== 'true' && isActiveStackCard
+    ? (isThumbnail
+        ? !project.open && project.dataset.closing !== 'true'
+        : project.open && project.dataset.closing !== 'true' && isActiveStackCard)
     : initialPageReady && !reducedMotion.matches && !navigator.connection?.saveData;
 
   if (!document.hidden && visibleVideos.has(video) && allowed) {
@@ -87,6 +96,16 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: .05 });
 
 videos.forEach(video => observer.observe(video));
+
+// Keep static preview videos on their first frame.
+document.querySelectorAll('video[data-static-preview]').forEach(video => {
+  const freeze = () => {
+    video.pause();
+    try { video.currentTime = 0; } catch {}
+  };
+  video.addEventListener('loadeddata', freeze, { once: true });
+  freeze();
+});
 document.addEventListener('visibilitychange', () => videos.forEach(syncVideo));
 reducedMotion.addEventListener('change', () => videos.forEach(syncVideo));
 

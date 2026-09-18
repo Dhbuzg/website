@@ -2,7 +2,8 @@
 
 #project-severance .project-content,
 #project-lego .project-content,
-#project-pot_series .project-content {
+#project-pot_series .project-content,
+#project-clay .project-content {
   overflow: visible;
 }
 
@@ -54,4 +55,32 @@
   .stack-card {
     transition-duration: 1ms;
   }
+}
+
+/* Clay -------------------------------------------------------------------- */
+#project-clay summary {
+  display: flex;
+  flex-direction: column;
+}
+
+#project-clay .project-caption--above {
+  order: 0;
+  margin-bottom: 14px;
+}
+
+#project-clay .project-image--video {
+  order: 1;
+  overflow: hidden;
+  background: #111;
+}
+
+#project-clay .project-thumbnail-video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+#project-clay .project-media-stack {
+  margin-top: 8px;
 }
