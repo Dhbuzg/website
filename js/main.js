@@ -24,15 +24,26 @@ function renderMediaStack(stack) {
   const cards = [...stack.querySelectorAll('.stack-card')];
   cards.forEach((card, index) => {
     card.classList.toggle('is-top', index === cards.length - 1);
+    card.setAttribute('aria-hidden', String(index !== cards.length - 1));
     card.style.setProperty('--stack-z', index + 1);
     card.style.setProperty('--stack-x', `${card.dataset.x || 0}px`);
     card.style.setProperty('--stack-y', `${card.dataset.y || 0}px`);
     card.style.setProperty('--stack-rotation', `${card.dataset.rotation || 0}deg`);
   });
+  const current = cards.at(-1)?.dataset.clip;
+  stack.setAttribute('aria-label', `Vidéo ${current} sur ${cards.length}. Afficher la suivante`);
+  stack.querySelector('.stack-count').textContent = `${current} / ${cards.length} · Suivante ↗`;
 }
 
 mediaStacks.forEach(stack => {
-  [...stack.querySelectorAll('.stack-card')].forEach(setupStackCard);
+  stack.setAttribute('role', 'button');
+  stack.tabIndex = 0;
+  const count = document.createElement('span');
+  count.className = 'stack-count';
+  count.setAttribute('aria-hidden', 'true');
+  stack.append(count);
+  const cards = [...stack.querySelectorAll('.stack-card')];
+  cards.forEach((card, index) => { card.dataset.clip = cards.length - index; setupStackCard(card); });
   renderMediaStack(stack);
 });
 
@@ -49,20 +60,11 @@ window.addEventListener('load', () => {
 function syncVideo(video) {
   if (!video) return;
 
-  // Static project previews are intentionally frozen.
-  if (video.hasAttribute('data-static-preview')) {
-    video.pause();
-    return;
-  }
-
   const project = video.closest('.project-details');
   const stackCard = video.closest('.stack-card');
-  const isThumbnail = video.classList.contains('project-thumbnail-video');
   const isActiveStackCard = !stackCard || stackCard.classList.contains('is-top');
   const allowed = project
-    ? (isThumbnail
-        ? !project.open && project.dataset.closing !== 'true'
-        : project.open && project.dataset.closing !== 'true' && isActiveStackCard)
+    ? project.open && project.dataset.closing !== 'true' && isActiveStackCard
     : initialPageReady && !reducedMotion.matches && !navigator.connection?.saveData;
 
   if (!document.hidden && visibleVideos.has(video) && allowed) {
@@ -97,19 +99,13 @@ const observer = new IntersectionObserver(entries => {
 
 videos.forEach(video => observer.observe(video));
 
-// Keep static preview videos on their first frame.
-document.querySelectorAll('video[data-static-preview]').forEach(video => {
-  const freeze = () => {
-    video.pause();
-    try { video.currentTime = 0; } catch {}
-  };
-  video.addEventListener('loadeddata', freeze, { once: true });
-  freeze();
-});
 document.addEventListener('visibilitychange', () => videos.forEach(syncVideo));
 reducedMotion.addEventListener('change', () => videos.forEach(syncVideo));
 
 mediaStacks.forEach(stack => {
+  stack.addEventListener('keydown', event => {
+    if (['Enter', ' ', 'ArrowRight'].includes(event.key)) { event.preventDefault(); stack.click(); }
+  });
   stack.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
@@ -118,6 +114,12 @@ mediaStacks.forEach(stack => {
     const cards = [...stack.querySelectorAll('.stack-card')];
     const topCard = cards.at(-1);
     if (!topCard) return;
+    if (reducedMotion.matches) {
+      stack.prepend(topCard);
+      renderMediaStack(stack);
+      syncStackVideos(stack);
+      return;
+    }
 
     stack.dataset.animating = 'true';
 
@@ -125,7 +127,7 @@ mediaStacks.forEach(stack => {
     const x = Number(topCard.dataset.x || 0);
     const y = Number(topCard.dataset.y || 0);
     const direction = rotation >= 0 ? 1 : -1;
-    const exitX = stack.clientWidth * 0.24 * direction;
+    const exitX = stack.clientWidth * 0.08 * direction;
 
     topCard.style.transition = `transform ${STACK_EXIT_DURATION}ms cubic-bezier(.4, 0, .2, 1)`;
     topCard.style.transform = `translate3d(${x + exitX}px, ${y}px, 0) rotate(${rotation + direction * 6}deg)`;
