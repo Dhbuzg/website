@@ -5,10 +5,21 @@ const animations = new Map();
 // Play only visible videos; hidden or collapsed projects never keep playing.
 const videos = [...document.querySelectorAll('.portfolio video')];
 const visibleVideos = new Set();
+let initialPageReady = document.readyState === 'complete';
+window.addEventListener('load', () => {
+  initialPageReady = true;
+  videos.forEach(syncVideo);
+}, { once: true });
 function syncVideo(video) {
   const project = video.closest('.project-details');
-  const allowed = project ? project.open && project.dataset.closing !== 'true' : !reducedMotion.matches;
+  const allowed = project ? project.open && project.dataset.closing !== 'true' : initialPageReady && !reducedMotion.matches && !navigator.connection?.saveData;
   if (!document.hidden && visibleVideos.has(video) && allowed) {
+    const source = video.querySelector('source[data-src]');
+    if (source) {
+      source.src = source.dataset.src;
+      source.removeAttribute('data-src');
+      video.load();
+    }
     video.play().catch(() => { /* Keep the poster if autoplay is unavailable. */ });
   } else {
     video.pause();
