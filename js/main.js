@@ -20,8 +20,18 @@ function setupStackCard(card) {
   card.dataset.y = randomBetween(-3, 3).toFixed(1);
 }
 
+function stackCards(stack) {
+  return [...stack.querySelectorAll('.stack-card')].sort((a, b) => Number(a.dataset.order) - Number(b.dataset.order));
+}
+
+function sendCardToBack(stack, card) {
+  const cards = stackCards(stack);
+  card.dataset.order = 0;
+  cards.filter(item => item !== card).forEach((item, index) => { item.dataset.order = index + 1; });
+}
+
 function renderMediaStack(stack) {
-  const cards = [...stack.querySelectorAll('.stack-card')];
+  const cards = stackCards(stack);
   cards.forEach((card, index) => {
     card.classList.toggle('is-top', index === cards.length - 1);
     card.setAttribute('aria-hidden', String(index !== cards.length - 1));
@@ -43,7 +53,7 @@ mediaStacks.forEach(stack => {
   count.setAttribute('aria-hidden', 'true');
   stack.append(count);
   const cards = [...stack.querySelectorAll('.stack-card')];
-  cards.forEach((card, index) => { card.dataset.clip = cards.length - index; setupStackCard(card); });
+  cards.forEach((card, index) => { card.dataset.order = index; card.dataset.clip = cards.length - index; setupStackCard(card); });
   renderMediaStack(stack);
 });
 
@@ -102,26 +112,74 @@ videos.forEach(video => observer.observe(video));
 document.addEventListener('visibilitychange', () => videos.forEach(syncVideo));
 reducedMotion.addEventListener('change', () => videos.forEach(syncVideo));
 
+// Decode the next clip before revealing it; keep the current card visible meanwhile.
+function prepareStackVideo(video) {
+  return new Promise(resolve => {
+    let frame;
+    let settled = false;
+    const finish = ready => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      video.removeEventListener('error', failed);
+      video.removeEventListener('loadeddata', decoded);
+      if (frame !== undefined) video.cancelVideoFrameCallback(frame);
+      video.pause();
+      if (ready) video.removeAttribute('poster');
+      resolve(ready);
+    };
+    const failed = () => finish(false);
+    const decoded = () => finish(true);
+    const timeout = setTimeout(failed, 12000);
+    video.addEventListener('error', failed, { once: true });
+    const source = video.querySelector('source[data-src]');
+    if (source) {
+      source.src = source.dataset.src;
+      source.removeAttribute('data-src');
+      video.load();
+    }
+    if (video.requestVideoFrameCallback) {
+      frame = video.requestVideoFrameCallback(decoded);
+    } else if (video.readyState >= 2) {
+      decoded();
+      return;
+    } else {
+      video.addEventListener('loadeddata', decoded, { once: true });
+    }
+    video.play().catch(failed);
+  });
+}
+
 mediaStacks.forEach(stack => {
   stack.addEventListener('keydown', event => {
     if (['Enter', ' ', 'ArrowRight'].includes(event.key)) { event.preventDefault(); stack.click(); }
   });
-  stack.addEventListener('click', event => {
+  stack.addEventListener('click', async event => {
     event.preventDefault();
     event.stopPropagation();
     if (stack.dataset.animating === 'true') return;
 
-    const cards = [...stack.querySelectorAll('.stack-card')];
+    const cards = stackCards(stack);
     const topCard = cards.at(-1);
-    if (!topCard) return;
-    if (reducedMotion.matches) {
-      stack.prepend(topCard);
-      renderMediaStack(stack);
+    const nextVideo = cards.at(-2)?.querySelector('video');
+    if (!topCard || !nextVideo) return;
+    stack.dataset.animating = 'true';
+    stack.setAttribute('aria-busy', 'true');
+    const ready = await prepareStackVideo(nextVideo);
+    stack.removeAttribute('aria-busy');
+    const project = stack.closest('.project-details');
+    if (!ready || document.hidden || (project && (!project.open || project.dataset.closing === 'true'))) {
+      delete stack.dataset.animating;
       syncStackVideos(stack);
       return;
     }
-
-    stack.dataset.animating = 'true';
+    if (reducedMotion.matches) {
+      sendCardToBack(stack, topCard);
+      renderMediaStack(stack);
+      syncStackVideos(stack);
+      delete stack.dataset.animating;
+      return;
+    }
 
     const rotation = Number(topCard.dataset.rotation || 0);
     const x = Number(topCard.dataset.x || 0);
@@ -133,8 +191,8 @@ mediaStacks.forEach(stack => {
     topCard.style.transform = `translate3d(${x + exitX}px, ${y}px, 0) rotate(${rotation + direction * 6}deg)`;
 
     window.setTimeout(() => {
-      // Move the clicked card to the back of this stack.
-      stack.prepend(topCard);
+      // Change visual order without detaching the video from the DOM.
+      sendCardToBack(stack, topCard);
       setupStackCard(topCard);
 
       const newRotation = Number(topCard.dataset.rotation || 0);
